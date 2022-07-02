@@ -3,6 +3,7 @@ package modelo.entidades;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import modelo.excecoes.ExcecaoDeDominio;
 
 public class Reserva {
 	private Integer numeroQuarto;
@@ -11,7 +12,13 @@ public class Reserva {
 	
 	private static SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 	
-	public Reserva(Integer numeroQuarto, Date checkin, Date checkout) {
+	public Reserva() {
+	}
+	
+	public Reserva(Integer numeroQuarto, Date checkin, Date checkout) throws ExcecaoDeDominio{
+	 if (!checkout.after(checkin)) {
+		throw new ExcecaoDeDominio("A data de check-out é anterior a data de check-in");
+	}else
 		this.numeroQuarto = numeroQuarto;
 		this.checkin = checkin;
 		this.checkout = checkout;
@@ -38,16 +45,27 @@ public class Reserva {
 		return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
 	}
 	
-	public String atualizaData(Date checkin, Date checkout) {
+	public void cadastraData(Date checkin, Date checkout, Integer numeroQuarto) {
 		Date agora = new Date();
 		if(checkin.before(agora) || checkout.before(agora)) {
-			return "datas de atualização anterior a data atual";
+			throw new IllegalArgumentException("Data de entrada é anterior a data atual");
+		}
+		if(checkout.after(checkin)) {
+			throw new IllegalArgumentException("A data de check-out é anterior a data de check-in");
+		}
+		this.checkin = checkin;
+		this.checkout= checkout;
+		this.numeroQuarto = numeroQuarto;
+	}
+	public void atualizaData(Date checkin, Date checkout) throws ExcecaoDeDominio {
+		Date agora = new Date();
+		if(checkin.before(agora) || checkout.before(agora)) {
+			throw new ExcecaoDeDominio("Datas de atualização anterior a data atual");
 		}if (!checkout.after(checkin)) {
-			return "A data de check-out é anterior a data de check-in";
+			throw new ExcecaoDeDominio("A data de check-out é anterior a data de check-in");
 		}
 			this.checkin = checkin;
 			this.checkout = checkout;
-			return null;
 	}
 	
 	@Override
@@ -60,7 +78,7 @@ public class Reserva {
 			+  sdf.format(checkout)
 			+  ", "
 			+  duracao()
-			+  " noites";
+			+  " noite(s)";
 				
 	}
 	
